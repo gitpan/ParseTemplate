@@ -4,13 +4,39 @@ require 5.004;
 use strict;
 use Parse::Template;
 
-my $T = new Parse::Template('HTML' => '<HTML>%%$N . HEAD() . $N . BODY() . $N%%</HTML>',
-			    'HEAD' => '<HEAD>%%$N . $N%%</HEAD>',
-			    'BODY' => '<BODY>%%$N . CONTENT() . $N%%</BODY>',
-			    'CONTENT' => '<p>A very simple document: %%ORDERED_LIST()%%',
-			    'ORDERED_LIST' =>
-			    q!%%$_[0] < 4 ? "$N<OL><li>$_[0]" . ORDERED_LIST($_[0] + 1) . "<li>$_[0]$N</OL>$N" : ''%%!,
-			   );
-$T->env('N' => "\n");
+my %template = ('DOC' => <<'END_OF_DOC;', 'SECTION_PART' => <<'END_OF_SECTION_PART;');
+<HTML>
+<HEAD></HEAD>
+<body>
+%%
+my $content;
+for (my $i = 0; $i <= $#section_content; $i++) {
+  $content .= SECTION_PART($i);
+} 
+$content;
+%%
+</body>
+</html>
+END_OF_DOC;
+%%
+$section_content[$_[0]]->{Content} =~ s/^/<p>/mg;
+join '', '<H1>', $section_content[$_[0]]->{Title}, '</H1>', 
+          $section_content[$_[0]]->{Content};
+%%
+END_OF_SECTION_PART;
 
-print $T->eval('HTML');
+my $tmplt = new Parse::Template (%template);
+
+$tmplt->env('section_content' => [
+			 {
+			  Title => 'First Section', 
+			  Content => 'Nothing to write'
+			 }, 
+			 {
+			  Title => 'Second section', 
+			  Content => 'Nothing else to write'
+			 }
+			]
+	   );
+
+print $tmplt->eval('DOC'), "\n";
