@@ -1,0 +1,14 @@
+MANIFEST
+Makefile
+Makefile.PL
+README
+doc/Template.fr.pod
+examples/gen_html.pl
+examples/html_template.pl
+examples/html_template2.pl
+examples/includes.pl
+examples/template.pl
+examples/template1.pl
+examples/template2.pl
+examples/template3.pl
+lib/Parse/Template.pm
