@@ -2,7 +2,7 @@ use strict;
 use warnings;
 require 5.6.0;
 package Parse::Template;
-$Parse::Template::VERSION = '0.36';
+$Parse::Template::VERSION = '0.37';
 
 use constant DEBUG => 0;
 use constant AUTOLOAD_TRACE => 0;
@@ -22,7 +22,7 @@ sub new {
   my $receiver = shift;
   my $class = $PACKAGE . '::Sym' . getid();
   my $self = bless {}, $class;	# absolutely nothing in $self
-  no strict;
+  no strict 'refs';
   @{"${class}::ISA"} = ref $receiver || $receiver;
   ${"${class}::ancestor"} = $receiver;	# reverse the destruction order
   *{"${class}::AUTOLOAD"} = \&AUTOLOAD; # so no warning for procedural calls
@@ -72,7 +72,8 @@ sub DESTROY {
   print STDERR "destroy(@_): ", ref $_[0], "\n" if DEBUG;
   delete_package(ref $_[0]);
 }
-# Purpose:  validate the regexp and replace "!" by "\!", and "/" by "\/"
+# Purpose: validate the regexp and replace "!" by "\!", and "/" by "\/" 
+#          if not already escaped
 # Arguments: a regexp
 # Returns: the preprocessed regexp
 sub ppregexp {
@@ -480,6 +481,24 @@ partir de la liste des balises HTML qui nous intéressent :
 				  map { $_ => $ELT_CONTENT } qw(P B I)
 				 );
 	print $HTML_T3->eval('DOC'), "\n";
+
+
+Pour bénéficier de la possibilité d'utiliser les parties du template
+comme des procédures, on pourra utiliser la solution qui consiste
+à hériter de la classe du template créé : 
+
+  use Parse::Template;
+  my $ELT_CONTENT = q!%%"<$part>" . join('', @_) . "</$part>"%%!;
+  my $G = new Parse::Template(
+			    map { $_ => $ELT_CONTENT } qw(H1 B I)
+			   );
+  @main::ISA = ref($G);
+  *AUTOLOAD = \&Parse::Template::AUTOLOAD;
+  print H1(B("text in bold"), I("text in italic"));
+
+La référence à C<Parse::Template::AUTOLOAD> évite un message indiquant
+que l'on hérite d'un C<AUTOLOAD> pour définir des appels procéduraux.  Pas
+très élégant. 
 
 =head2 Génération de HTML par invocation de méthodes
 
