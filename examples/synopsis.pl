@@ -8,7 +8,7 @@ use Parse::Template;
 
 my %template = 
   (
-   'TOP' =>  q!Text before %%$N . SUB_PART(1)%%Text after!,
+   'TOP' =>  q!Text before%%$N . SUB_PART(1)%%Text after!,
    'SUB_PART' => q!Inserted part from %%"$part(@_)"%%
    1. List: %%"@list"%%
    2. Hash: %%"$hash{'some_key'}"%%

@@ -1,6 +1,6 @@
 =head1 NAME
 
-Parse::Template - Processeur de templates contenant des expressions Perl (0.33)
+Parse::Template - Processeur de templates contenant des expressions Perl 
 
 =head1 SYNOPSIS
 

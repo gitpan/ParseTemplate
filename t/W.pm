@@ -1,5 +1,9 @@
 # Examples: 
 # make test TEST_FILES=t/test3.t TEST_VERBOSE=2
+# todo:
+# - implement different kind of comparators 
+#   (kind of fuzzy matching)
+#   ignore trailing spaces, ignore differences of line terminators
 
 require 5.004;
 use strict;
@@ -100,7 +104,9 @@ sub report {			# borrowed to the DProf.pm package
   $x = &$sub;
   $x ? "ok $num\n" : "not ok $num\n";
 }
-sub all_in_one {		# not used, not tested
+my $DELIM_START = ">>>>\n";
+my $DELIM_END = "\n<<<<";
+sub all_in_one {		
   my $self = shift;
   my $prog_to_test = shift;
   my $reference = shift;	# filehandle
@@ -110,13 +116,19 @@ sub all_in_one {		# not used, not tested
 		  my $expectation = $self->expected;
 		  my $result =  $self->result;
 		  if ($VERBOSE >= 2) {
-		    print STDERR ">>>Expected:\n$expectation\n";
-		    print STDERR ">>>Result:\n$result\n";
+		      print STDERR "\n";
+		      print STDERR ">>>Expected:\n$expectation\n";
+		      print STDERR ">>>Result:\n$result\n";
 		  }
 		  $expectation =~ s/\s+$//;
 		  $result =~ s/\s+$//;
 		  unless ($expectation eq $result) {
-		    print "$result\n" if $VERBOSE;
+		      if ($VERBOSE >= 2) {
+			  # ...
+			  if ($expectation eq $result) {
+			  }
+		      } elsif ($VERBOSE) {
+		      }
 		    0;
 		  } else {
 		    1;

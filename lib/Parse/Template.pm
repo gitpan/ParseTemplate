@@ -1,7 +1,7 @@
 use strict
 require 5.004;
 package Parse::Template;
-$Parse::Template::VERSION = '0.33';
+$Parse::Template::VERSION = '0.34';
 
 use constant DEBUG => 0;	
 use constant AUTOLOAD_TRACE => 0;
@@ -186,7 +186,7 @@ __END__
 
 =head1 NAME
 
-Parse::Template - Processor for templates containing Perl expressions (0.32)
+Parse::Template - Processor for templates containing Perl expressions 
 
 =head1 SYNOPSIS
 
@@ -476,6 +476,7 @@ in the classes C<Parse::Lex>, C<Parse::CLex> and C<Parse::Token>.
 =head1 NOTES CONCERNING THE CURRENT VERSION
 
 I would be very interested to receive your comments and suggestions.
+English documentation isn't up to date.
 
 =head1 BUG
 
@@ -484,11 +485,11 @@ to create a large number of instances.
 
 =head1 AUTHOR
 
-Philippe Verdret (with translation of documentation into English by Ocrat)
+Philippe Verdret (with translation of documentation into English by Ocrat).
 
 =head1 COPYRIGHT
 
-Copyright (c) 1995-1999 Philippe Verdret. All rights reserved.
+Copyright (c) 1995-2000 Philippe Verdret. All rights reserved.
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
