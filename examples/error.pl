@@ -10,14 +10,16 @@ BEGIN {  unshift @INC, "../lib"; }
 use Parse::Template;
 $|++;
 
-$Parse::Template::CONFESS = 1;
+$Parse::Template::CONFESS = 0;
 eval {
   Parse::Template->new(
-		       'TOP' => q!%%$_[0] < 10 ? '[' . TOP($_[0] + 1) . ']' : DIE() %%!,
+		       'TOP' => q!%%$_[0] < 3 ? '[' . TOP($_[0] + 1) . ']' : DIE() %%!,
 		       'ERROR' => q!%% problem++ %%!,
 		       'DIE' => q!%%die()%%!,
 		      )->eval('TOP', 0);
 };
+__END__
+exit;
 $Parse::Template::CONFESS = 0;
 print STDERR "---\n";
 eval {

@@ -3,7 +3,7 @@
 BEGIN {  push(@INC, './t') }	# where is W.pm
 use W;
 
-print W->new()->all_in_one("examples/derived.pl", *DATA);
+print W->new()->test("test3", "examples/derived.pl", *DATA);
 
 __DATA__
 ANCESTOR template: 'TOP' part ->

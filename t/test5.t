@@ -3,7 +3,7 @@
 BEGIN {  push(@INC, './t') }	# where is W.pm
 use W;
 
-print W->new()->all_in_one("examples/html_generator.pl", *DATA);
+print W->new()->test('test5', "examples/html_generator.pl", *DATA);
 
 __DATA__
 <HTML>
