@@ -1,9 +1,8 @@
 use strict;
 use warnings;
-#use diagnostics;
 require 5.6.0;
 package Parse::Template;
-$Parse::Template::VERSION = '0.35';
+$Parse::Template::VERSION = '0.36';
 
 use constant DEBUG => 0;
 use constant AUTOLOAD_TRACE => 0;
@@ -81,7 +80,7 @@ sub ppregexp {
   my $regexp = $_[1];
   eval { '' =~ /$regexp/ };
   if ($@) {	
-    $@ =~ s/\s+at\s+[^\s]+\s+line\s+\d+[.]\n$//; # annoying...
+    $@ =~ s/\s+at\s+[^\s]+\s+line\s+\d+[.]\n$//; # annoying info
     require Carp;
     Carp::croak $@;	
   }
@@ -257,8 +256,8 @@ L'inclusion d'une sous-partie se fait par mention de la partie dans
 une expression Perl. Cette inclusion peut se faire en utilisant un
 style de programmation object ou procédural.
 
-Au sein d'une partie, l'inclusion d'une sous-partie peut se faire au
-moyen d'une expression de la forme :
+Dans un style object, au sein d'une partie, l'inclusion d'une
+sous-partie peut se faire au moyen d'une expression de la forme :
 
   $self->eval('SUB_PART_NAME')
 
@@ -268,8 +267,8 @@ variable est automatiquement définie (de même que la variable C<$part>
 qui contient le nom de la partie du template dans laquelle se trouve
 l'expression).
 
-L'insertion d'une partie peut se réduire à l'invocation d'une méthode
-dont le nom est celui de la partie à insérer :
+L'insertion d'une partie peut également se réduire à l'invocation
+d'une méthode dont le nom est celui de la partie à insérer :
 
   $self->SUB_PART_NAME()
 
@@ -325,7 +324,7 @@ la pile des évaluations est imprimée.
 =item new HASH
 
 Constructeur de la classe. C<HASH> est un tableau associatif qui
-définit le texte du template.
+définit les parties du template.
 
 Exemple.
 
@@ -436,8 +435,7 @@ d'appels imbriqués de fonctions. On souhaite par exemple obtenir le texte :
 
 	P(B("text in bold"), I("text in italic"))
 
-Les fonctions sont les parties du template que nous allons définir.
-
+Les fonctions vont être définies comme des parties d'un template.
 Au coeur de chaque partie, se trouve l'expression Perl suivante : 
 
 	join '', @_

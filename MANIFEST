@@ -1,7 +1,7 @@
 MANIFEST
 Makefile.PL
 README
-doc/Template.en.pod
+doc/Template_en.pod
 examples/delegation2.pl
 examples/derived.pl
 examples/die.pl
