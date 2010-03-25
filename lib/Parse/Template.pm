@@ -2,10 +2,10 @@ use strict;
 use warnings;
 require 5.6.0;
 package Parse::Template;
-$Parse::Template::VERSION = '0.37';
+$Parse::Template::VERSION = '3.00';
 
+use Carp;
 use constant DEBUG => 0;
-use constant AUTOLOAD_TRACE => 0;
 use vars qw/$AUTOLOAD/;
 sub AUTOLOAD {
   my($class, $part) = ($AUTOLOAD =~ /(.*)::(.*)$/);
@@ -23,6 +23,9 @@ sub new {
   my $class = $PACKAGE . '::Sym' . getid();
   my $self = bless {}, $class;	# absolutely nothing in $self
   no strict 'refs';
+  %{"${class}::template"} = ();	# so no 'used only once' warning
+  ${"${class}::ancestor"} = '';	# so no 'used only once' warning
+
   @{"${class}::ISA"} = ref $receiver || $receiver;
   ${"${class}::ancestor"} = $receiver;	# reverse the destruction order
   *{"${class}::AUTOLOAD"} = \&AUTOLOAD; # so no warning for procedural calls
@@ -35,7 +38,6 @@ sub env {
   my $class = ref $self || $self;
   my $symbol = shift;
   if ($symbol =~ /\W/) {
-    require Carp;
     Carp::croak "invalid symbol name: $symbol"
   }
   no strict;
@@ -44,27 +46,28 @@ sub env {
       my $value = shift;
       print STDERR "${class}::$symbol\t$value\n" if TRACE_ENV;
       if (ref $value) {
-	*{"${class}::$symbol"} = $value;
+		*{"${class}::$symbol"} = $value;
       } else {			# scalar value
       	*{"${class}::$symbol"} = \$value;
       }
       $symbol = shift if @_;
       if ($symbol =~ /\W/) {
-	require Carp;
-	Carp::croak "invalid symbol name: $symbol";
+		Carp::croak "invalid symbol name: $symbol";
       }
     } while (@_);
-  } elsif (defined *{"${class}::$symbol"}) { # borrowed from Exporter.pm
+  } 
+  elsif (defined *{"${class}::$symbol"}) { # borrowed from Exporter.pm
     return \&{"${class}::$symbol"} unless $symbol =~ s/^(\W)//;
     my $type = $1;
     return 
-      $type eq '*' ?  *{"${class}::$symbol"} :
-	$type eq "\$" ? \${"${class}::$symbol"} :
-	  $type eq '%' ? \%{"${class}::$symbol"} :
-	    $type eq '@' ? \@{"${class}::$symbol"} :
-	      $type eq '&' ? \&{"${class}::$symbol"} :
-		do { require Carp; Carp::croak("Can\'t find symbol: $type$symbol") };
-  } else {
+		$type eq '*' ?  *{"${class}::$symbol"} :
+		$type eq "\$" ? \${"${class}::$symbol"} :
+		$type eq '%' ? \%{"${class}::$symbol"} :
+		$type eq '@' ? \@{"${class}::$symbol"} :
+		$type eq '&' ? \&{"${class}::$symbol"} :
+		do { Carp::croak("Can\'t find symbol: $type$symbol") };
+  } 
+  else {
     undef;
   }
 }
@@ -82,7 +85,6 @@ sub ppregexp {
   eval { '' =~ /$regexp/ };
   if ($@) {	
     $@ =~ s/\s+at\s+[^\s]+\s+line\s+\d+[.]\n$//; # annoying info
-    require Carp;
     Carp::croak $@;	
   }
   $regexp =~ s{
@@ -100,7 +102,6 @@ sub getPart {
   unless (defined($text = ${"${class}::template"}{$part})) {
      my $parent = ${"${class}::ISA"}[0]; # delegation
      unless (defined $parent) {
-      require Carp;
       Carp::croak("'$part' template part is not defined");
     }
     $text = $parent->getPart($part);
@@ -140,7 +141,8 @@ my $__DIE__ = sub {
     } else {
       print STDERR "Error in part '$part':\n$expr\n";
     }
-  } else {
+  } 
+  else {
     print STDERR "\$1 not defined";    
   }
   print STDERR "\$1: $1\n";    
@@ -191,7 +193,7 @@ __END__
 
 =head1 NAME
 
-Parse::Template - Processeur de templates contenant des expressions Perl 
+Parse::Template - Processor for templates containing Perl expressions
 
 =head1 SYNOPSIS
 
@@ -220,348 +222,322 @@ Parse::Template - Processeur de templates contenant des expressions Perl
 
 =head1 DESCRIPTION
 
-La classe C<Parse::Template> évalue des expressions Perl
-placées dans un texte.  Cette classe peut être utilisée comme
-générateur de code, ou de documents appartenant à un format
-documentaire quelconque (HTML, XML, RTF, etc.). 
+The C<Parse::Template> class evaluates Perl expressions
+placed within a text.  This class can be used as a code generator,
+or a generator of documents in various document formats (HTML, XML,
+RTF, etc.).
 
-Le principe de la génération de texte à partir d'un template est
-simple.  Un template est un texte qui comporte des expressions à
-évaluer. L'interprétation des expressions génère des fragments de
-textes qui viennent se substituer aux expressions. Dans le cas de
-C<Parse::Template> les expressions à évaluer appartiennent au langage
-Perl et sont placées entre deux C<%%>.  L'évaluation des expressions
-doit avoir lieu dans un environnement dans lequel sont définies des
-structures de données qui serviront à générer les parties à compléter.
+The principle of template-based text generation is simple.  A template
+consists of a text which includes expressions to be evaluated.
+Interpretation of these expressions generates text fragments which are
+substituted in place of the expressions.  In the case of
+C<Parse::Template> the expressions to be evaluated are Perl expressions placed within
+two C<%%>.
+
+Evaluation takes place within an environment in which, for example,
+you can place data structures which will serve to generate the
+parts to be completed.
 
 
              TEMPLATE
-          Texte + Expressions Perl
-		|
-		+-----> Evaluation ----> Texte (document, programme, ...)
-		|	
-	   Subs + Structures de données
-            ENVIRONNEMENT
+           Text + Perl Expression 
+                |
+                +-----> Evaluation ----> Text(document or program)
+                |
+           Subs + Data structures
+            ENVIRONMENT
 
-
-Dans la classe C<Parse::Template> le document à générer est 
-décomposé en parties définies dans un tableau associatif. Le clé dans
-ce tableau est le nom de la partie, la valeur le contenu associé.
-
-Le tableau associatif est passé en argument au constructeur de la
-classe : 
-
-  Parse::Template->new(SomePart => '... text with expressions to evaluate ...')
-
-L'inclusion d'une sous-partie se fait par mention de la partie dans
-une expression Perl. Cette inclusion peut se faire en utilisant un
-style de programmation object ou procédural.
-
-Dans un style object, au sein d'une partie, l'inclusion d'une
-sous-partie peut se faire au moyen d'une expression de la forme :
+The C<Parse::Template> class permits decomposing a template into
+parts.  These parts are defined by a hash passed as an argument to the
+class constructor:
+C<Parse::Template->E<gt>C<new('someKey', '... text with expressions to
+evaluate ...')>.  Within a part, a sub-part can be included by means of
+an expression of the form:
 
   $self->eval('SUB_PART_NAME')
 
-Cette expression doit retourner le texte à insérer en lieu et place.
-C<$self> désigne l'instance de la classe C<Parse::Template>.  Cette
-variable est automatiquement définie (de même que la variable C<$part>
-qui contient le nom de la partie du template dans laquelle se trouve
-l'expression).
+C<$self> designates the instance of the C<Parse::Template> class.
+In an expression you can also use the C<$part> which contains the
+part of the template where the expression is found.
 
-L'insertion d'une partie peut également se réduire à l'invocation
-d'une méthode dont le nom est celui de la partie à insérer :
-
-  $self->SUB_PART_NAME()
-
-Dans un style procédural l'insertion d'une partie se fait par la simple
-mention du nom de la partie. Dans l'exemple du synopsis, l'insertion
-de la partie C<TOP> peut ainsi se réécrire comme suit :
+Within an expression it is possible to specify only the name of a part
+to be inserted.  In this case a subroutine with the name of this part
+is generated dynamically.  In the example given in the synopsis, the
+insertion of the C<TOP> part can thus be rewritten as follows:
 
   'TOP' => q!Text before %%DATA()%% text after!
 
-C<DATA()> est placée entre C<%%> et est de fait traiter comme une
-expression a évaluer. C<Parse::Template> se charge de génèrer
-dynamiquement la routine C<DATA()>.
+C<DATA()> is placed within C<%%> and is in effect treated as an
+expression to be evaluated.
 
-Les routines peuvent être appelées avec des arguments. Dans l'exemple
-qui suit on utilise un argument pour contrôler la profondeur des
-appels récursifs d'un template :
+The subroutines take arguments.  In the following example,
+the argument is used to control the depth of recursive calls
+of a template:
 
   print Parse::Template->new(
-	   'TOP' => q!%%$_[0] < 10 ? '[' . TOP($_[0] + 1) . ']' : ''%%!
-	  )->eval('TOP', 0);
+    'TOP' => q!%%$_[0] < 10 ? '[' . TOP($_[0] + 1) . ']' : ''%%!
+   )->eval('TOP', 0);
 
-C<$_[0]> qui contient initialement 0 est incrémenté à chaque nouvelle
-inclusion de la partie C<TOP> et cette partie est incluse tant que
-l'argument est inférieur à 10.
+C<$_[0]> initially contains 0. C<TOP> is included as long as the
+argument is less than 10.  For each inclusion, 1 is added to the argument.
 
-La méthode C<env()> permet de construire l'environnement requis pour
-l'évaluation d'un template. Chaque entrée à définir dans
-l'environnement est spécifiée au moyen d'une clé du nom du symbole à
-créer, associée à une référence dont le type est celui de l'entrée à
-créer dans cet environnement (par exemple, une référence à un
-tableau pour créer un tableau).  Un variable scalaire est définie en
-associant le nom de la variable à sa valeur.  Une variable scalaire
-contenant une référence est définie en écrivant
-C<'var'=>E<gt>C<\$variable>, avec C<$variable> une variable à portée
-lexicale qui contient la référence.
+The C<env()> method permits constructing the environment required for
+evaluation of a template.  Each entry to be defined within this
+environment must be specified using a key consisting of the name of
+the symbol to be created, associated with a reference whose type is
+that of the entry to be created within this environment (for example,
+a reference to an array to create an array).  A scalar variable is
+defined by associating the name of the variable with its value.  A
+scalar variable containing a reference is defined by writing
+C<'var'=>E<gt>C<\$variable>, where C<$variable> is a lexical variable
+that contains the reference.
 
-Chaque instance de C<Parse::Template> est définie dans une classe
-spécifique, sous-classe de C<Parse::Template>. La sous-classe contient
-l'environnement spécifique au template et hérite des méthodes de la
-classe C<Parse::Template>.  Si un template est créé à partir d'un
-template existant, le template dérivé hérite des parties définies par
-son ancêtre.
+Each instance of C<Parse::Template> is defined within a specific class,
+a subclass of C<Parse::Template>.  The subclass contains the environment
+specific to the template and inherits methods from the C<Parse::Template> class.
 
-En cas d'erreur dans l'évaluation d'une expression, C<Parse::Template>
-essaie d'indiquer la partie du template et l'expression à
-incriminer. Si la variable C<$Parse::Template::CONFESS> est à VRAIE,
-la pile des évaluations est imprimée.
+If a template is created from an existing template (i.e. calling
+C<new> as a method of the existing template), it inherits all the parts defined by its ancestor.
 
-=head1 METHODES
+In case of a syntax error in the evalutaion of an expression,
+C<Parse::Template> tries to indicate the template part and the
+expression that is "incriminated".  If the variable
+C<$Parse::Template::CONFESS> contains the value TRUE, the stack
+of evaluations is printed.
+
+=head1 METHODS
 
 =over 4
 
 =item new HASH
 
-Constructeur de la classe. C<HASH> est un tableau associatif qui
-définit les parties du template.
+Constructor for the class. C<HASH> is a hash which defines the
+template text.
 
-Exemple.
+Example:
 
-	use Parse::Template;
-	$t = new Parse::Template('key' => 'associated text');
+  use Parse::Template;
+  $t = new Parse::Template('key' => 'associated text');
 
 =item env HASH
 
 =item env SYMBOL
 
-Permet de définir l'environnement d'évaluation spécifique à un
-template.
+Permits defining the environment that is specific to a template.
 
-C<env(SYMBOL)> retourne la référence assocée au symbole ou C<undef> si
-le symbole n'est pas défini. La référence retournée est du type
-indiqué par le caractère (C<&, $, %, @, *>) qui préfixe le symbole.
+C<env(SYMBOL)> returns the reference associated with the symbol, or
+C<undef> if the symbol is not defined.  The reference that is returned
+is of the type indicated by the character (C<&, $, %, @, *>) that
+prefixes the symbol.
 
-Exemples.
+Examples:
 
-  $tmplt->env('MY_LIST' => [1, 2, 3])}   Définition d'une liste
+  $tmplt->env('LIST' => [1, 2, 3])}   Defines a list
 
-  @{$tmplt->env('*MY_LIST')}             Retourne la liste
+  @{$tmplt->env('*LIST')}             Returns the list
 
-  @{$tmplt->env('@MY_LIST')}             Idem
+  @{$tmplt->env('@LIST')}             Ditto
 
 
 =item eval PART_NAME
 
-Evalue le partie du template désignée par C<PART_NAME>. Retourne la
-chaîne de caractères résultant de cette évaluation.
+Evaluates the template part designated by C<PART_NAME>.  Returns the
+string resulting from this evaluation.
 
 =item getPart PART_NAME
 
-Retourne la partie désignée du template.
+Returns the designated part of the template.
 
 =item ppregexp REGEXP
 
-Pré-processe une expression régulière de manière à ce que l'on puisse
-l'insérer sans problème dans un template où le délimiteur d'expression
-régulière est un "/", ou un "!".
+Preprocesses a regular expression so that it can be inserted into a
+template where the regular expression delimiter is either a "/" or a
+"!".
 
 =item setPart PART_NAME => TEXT
 
-C<setPart()> permet de définir une nouvelle entrée dans le hash qui
-définit le contenu du template.
+C<setPart()> permits defining a new entry in the hash that defines the
+contents of the template.
 
 =back
 
-=head1 EXEMPLES
+=head1 EXAMPLES
 
-La classe C<Parse::Template> permet de se livrer à toutes sortes de
-facéties. En voici quelques illustrations.
+The C<Parse::Template> class can be used in all sorts of amusing
+ways. Here are a few illustrations.
 
-=head2 Génération de HTML
+=head2 HTML Generator
 
-Le premier exemple montre comment générer un document HTML en
-exploitant une structure de données placée dans l'environnement
-d'évaluation. Le template comporte deux parties C<DOC> et C<SECTION>.
-La partie C<SECTION> est appelée au sein de la partie C<DOC> pour
-générer autant de sections qu'il y a d'élément dans le tableau
-C<@section_content>.
+The first example shows how to generate an HTML document by using a
+data structure placed within the evaluation environment.  The template
+consists of two parts, C<DOC> and C<SECTION>.  The C<SECTION> part is
+called within the C<DOC> part to generate as many sections as there are
+elements in the array C<section_content>.
 
-	my %template = ('DOC' => <<'END_OF_DOC;', 'SECTION' => <<'END_OF_SECTION;');
-	<html>
-	<head></head>
-	<body>
-	%%
-	my $content;
-	for (my $i = 0; $i <= $#section_content; $i++) {
-	  $content .= SECTION($i);
-	} 
-	$content;
-	%%
-	</body>
-	</html>
-	END_OF_DOC;
-	%%
-	$section_content[$_[0]]->{Content} =~ s/^/<p>/mg;
-	join '', '<H1>', $section_content[$_[0]]->{Title}, '</H1>', 
-                  $section_content[$_[0]]->{Content};
-	%%
-	END_OF_SECTION;
-	
-	my $tmplt = new Parse::Template (%template);
-	
-	$tmplt->env('section_content' => [
-				 {
-				  Title => 'First Section', 
-				  Content => 'Nothing to declare'
-				 }, 
-				 {
-				  Title => 'Second section', 
-				  Content => 'Nothing else to declare'
-				 }
-				]
-		   );
-	
-	print $tmplt->eval('DOC'), "\n";
+  my %template = ('DOC' => <<'END_OF_DOC;', 'SECTION' => <<'END_OF_SECTION;');
+  <html>
+  <head></head>
+  <body>
+  %%
+  my $content;
+  for (my $i = 0; $i <= $#section_content; $i++) {
+    $content .= SECTION($i);
+  }
+  $content;
+  %%
+  </body>
+  </html>
+  END_OF_DOC;
+  %%
+  $section_content[$_[0]]->{Content} =~ s/^/<p>/mg;
+  join '', '<H1>', $section_content[$_[0]]->{Title}, '</H1>',
+                   $section_content[$_[0]]->{Content};
+  %%
+  END_OF_SECTION;
 
-=head2 Génération de HTML par appel de fonctions
+  my $tmplt = new Parse::Template (%template);
 
-Le second exemple montre comment générer un document HTML à partir
-d'appels imbriqués de fonctions. On souhaite par exemple obtenir le texte :
+  $tmplt->env('section_content' => [
+      {
+        Title => 'First Section',
+        Content => 'Nothing to write'
+      },
+      {
+        Title => 'Second section',
+        Content => 'Nothing else to write'
+      }
+    ]
+  );
 
-	<P><B>text in bold</B><I>text in italic</I></P>
+  print $tmplt->eval('DOC'), "\n";
 
-à partir de la forme :
+=head2 HTML generation using functional notation
 
-	P(B("text in bold"), I("text in italic"))
+The second example shows how to generate an HTML document using a
+functional notation, in other words, obtaining the text:
 
-Les fonctions vont être définies comme des parties d'un template.
-Au coeur de chaque partie, se trouve l'expression Perl suivante : 
+  <P><B>text in bold</B><I>text in italic</I></P>
 
-	join '', @_
+from:
 
-Le contenu à évaluer est le même quel que soit la balise et peut donc
-être placé dans une variable : 
+  P(B("text in bold"), I("text in italic"))
 
-	$DOC = q!P(B("text in bold"), I("text in italic"))!;
+The functions P(), B() and I() are defined as parts of a template.  The Perl expression
+that permits producing the content of an element is
+very simple, and reduces to:
 
-	my $ELT_CONTENT = q!%%join '', @_%%!;
-	my $HTML_T1 = new Parse::Template(
-	                    'DOC' => qq!%%$DOC%%!,
-			    'P' => qq!<P>$ELT_CONTENT</P>!,
-			    'B' => qq!<B>$ELT_CONTENT</B>!,
-			    'I' => qq!<I>$ELT_CONTENT</I>!,
-			   );
-	print $HTML_T1->eval('DOC'), "\n";
+  join '', @_
 
-La variable C<$DOC> contient la racine de notre template.
+The content to be evaluated is the same regardless of the tag and can
+therefore be placed within a variable.  We therefore obtain the
+following template:
 
-Nous pouvons aller un peu plus loin dans la factorisation de la
-définition des parties du template en exploitant la variable C<$part>
-qui est définie par défaut dans l'environnement d'évaluation d'un
-template :
+  my $ELT_CONTENT = q!%%join '', @_%%!;
+  my $HTML_T1 = new Parse::Template(
+       'DOC' => '%%P(B("text in bold"), I("text in italic"))%%',
+       'P'   => qq!<P>$ELT_CONTENT</P>!,
+       'B'   => qq!<B>$ELT_CONTENT</B>!,
+       'I'   => qq!<I>$ELT_CONTENT</I>!,
+      );
+  print $HTML_T1->eval('DOC'), "\n";
 
-	$ELT_CONTENT = q!%%"<$part>" . join('', @_) . "</$part>"%%!;
-	$HTML_T2 = new Parse::Template(
-	                    'DOC' => qq!%%$DOC%%!,
-			    'P' => qq!$ELT_CONTENT!,
-			    'B' => qq!$ELT_CONTENT!,
-			    'I' => qq!$ELT_CONTENT!,
-			   );
-	print $HTML_T2->eval('DOC'), "\n";
+We can go further by making use of the C<$part> variable, which
+is defined by default in the environment of evaluation of the template:
 
+  my $ELT_CONTENT = q!%%"<$part>" . join('', @_) . "</$part>"%%!;
+  my $HTML_T2 = new Parse::Template(
+       'DOC' => '%%P(B("text in bold"), I("text in italic"))%%',
+       'P'   => qq!$ELT_CONTENT!,
+       'B'   => qq!$ELT_CONTENT!,
+       'I'   => qq!$ELT_CONTENT!,
+      );
+  print $HTML_T2->eval('DOC'), "\n";
 
-Enfin, nous pouvons automatiser la production des expressions à
-partir de la liste des balises HTML qui nous intéressent : 
+Let's look at another step which automates the production of 
+expressions from the list of HTML tags which are of interest to us:
 
-	$ELT_CONTENT = q!%%"<$part>" . join('', @_) . "</$part>"%%!;
-	$HTML_T3 = new Parse::Template(
-				  'DOC' => qq!%%$DOC%%!,
-				  map { $_ => $ELT_CONTENT } qw(P B I)
-				 );
-	print $HTML_T3->eval('DOC'), "\n";
+  my $DOC = q!P(B("text in bold"), I("text in italic"))!;
+  my $ELT_CONTENT = q!%%"<$part>" . join('', @_) . "</$part>"%%!;
+  my $HTML_T3 = new Parse::Template(
+       'DOC' => qq!%%$DOC%%!,
+       map { $_ => $ELT_CONTENT } qw(P B I)
+      );
+  print $HTML_T3->eval('DOC'), "\n";
 
-
-Pour bénéficier de la possibilité d'utiliser les parties du template
-comme des procédures, on pourra utiliser la solution qui consiste
-à hériter de la classe du template créé : 
+To benefit from the possibility of using the template parts as procedures, we can
+inherit from the generated template class:
 
   use Parse::Template;
   my $ELT_CONTENT = q!%%"<$part>" . join('', @_) . "</$part>"%%!;
   my $G = new Parse::Template(
-			    map { $_ => $ELT_CONTENT } qw(H1 B I)
-			   );
+       map { $_ => $ELT_CONTENT } qw(H1 B I)
+      );
   @main::ISA = ref($G);
   *AUTOLOAD = \&Parse::Template::AUTOLOAD;
   print H1(B("text in bold"), I("text in italic"));
 
-La référence à C<Parse::Template::AUTOLOAD> évite un message indiquant
-que l'on hérite d'un C<AUTOLOAD> pour définir des appels procéduraux.  Pas
-très élégant. 
+The reference to C<Parse::Template::AUTOLOAD> avoids the warning message:
 
-=head2 Génération de HTML par invocation de méthodes
+  Use of inherited AUTOLOAD for non-method %s() is deprecated
 
-Moyennant une légère transformation il est possible d'utiliser une
-notation de type invocation de méthode dans l'expression associée
-aux parties à définir :
+Not very elegant.
 
-	$ELT_CONTENT = q!%%shift(@_); "<$part>" . join('', @_) . "</$part>"%%!;
-	$HTML_T4 = new Parse::Template(
-				  map { $_ => $ELT_CONTENT } qw(P B I)
-				 );
-	print $HTML_T4->P(
-	                  $HTML_T4->B("text in bold"), 
-		          $HTML_T4->I("text in italic")
-                         ), "\n";
+=head2 HTML generation by method call
 
-Le C<shift(@_)> permet de se débarasser de l'objet template dont nous
-n'avons pas besoin dans l'expression associée à chaque balise.
+With a slight transformation it is possible to use a 
+method-invocation notation:
 
-=head2 Héritage de parties
+  my $ELT_CONTENT = q!%%shift(@_); "<$part>" . join('', @_) . "</$part>"%%!;
+  my $HTML_T4 = new Parse::Template(
+       map { $_ => $ELT_CONTENT } qw(P B I)
+      );
+  print $HTML_T4->P(
+                    $HTML_T4->B("text in bold"),
+                    $HTML_T4->I("text in italic")
+                   ), "\n";
 
-Dans l'exemple qui suit le template fils C<$C> hérite des parties
-définies dans son template ancêtre C<$A> :
+The C<shift(@_)> permits getting rid of the template object, which
+we don't need within the expression.
 
-	my %ancestor = 
-	  (
-	   'TOP' => q!%%"Use the $part model and -> " . CHILD()%%!,
-	   'ANCESTOR' => q!ANCESTOR %%"'$part' part\n"%%!,
-	  );
+=head2 Inheritance of parts
 
-	my %child = 
-	  (
-	   'CHILD' => q!CHILD %%"'$part' part"%% -> %%ANCESTOR() . "\n"%%!,
-	  );
-	my $A = new Parse::Template (%ancestor);
-	my $C = $A->new(%child);
-	print $C->TOP();
+In the following example the child template C<$C> inherits the parts defined 
+in its parent template C<$A>:
 
+  my %ancestor = 
+    (
+     'TOP' => q!%%"Use the $part model and -> " . CHILD()%%!,
+     'ANCESTOR' => q!ANCESTOR %%"'$part' part\n"%%!,
+    );
 
-Le partie C<TOP> définie dans C<$A> est directement invocable sur
-C<$C> qui est dérivé de C<$A>.
+  my %child = 
+    (
+     'CHILD' => q!CHILD %%"'$part' part"%% -> %%ANCESTOR() . "\n"%%!,
+    );
+  my $A = new Parse::Template (%ancestor);
+  my $C = $A->new(%child);
+  print $C->TOP();
 
-=head2 D'autres exemples
+The part <TOP> defined in C<$A> can be called directly from C<$C>, that derives from C<$A>.
 
-C<Parse::Template> a été initialement créée pour servir de générateur
-de code à la classe C<Parse::Lex>. Vous trouverez d'autres exemples
-d'utilisation dans les classes C<Parse::Lex>, C<Parse::CLex> et
-C<Parse::Token> disponibles sur le CPAN.
+=head2 Other examples
 
-=head1 APROPOS DE LA VERSION EN COURS
+C<Parse::Template> was initially created to serve as a code generator
+for the C<Parse::Lex> class.  You will find other examples of its use
+in the classes C<Parse::Lex>, C<Parse::CLex> and C<Parse::Token>.
 
-N'Hésitez pas à me contacter.  Une traduction en anglais d'une version
-antérieure de cette documentation est disponible dans le répertoire
-C<doc>.
+=head1 NOTES CONCERNING THE CURRENT VERSION
+
+I would be very interested to receive your comments and suggestions.
 
 =head1 BUGS
 
-Les instances ne sont pas détruites. Donc n'utilisez pas cette classe
-pour créer un grand nombre d'instances.
+Instances are not destroyed.  Therefore, do not use this class 
+to create a large number of instances.
 
-=head1 AUTEUR
+=head1 AUTHOR
 
-Philippe Verdret
+Philippe Verdret (with translation of documentation into English by Ocrat)
 
 =head1 COPYRIGHT
 

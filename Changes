@@ -1,0 +1,15 @@
+VERSION 2.20 - 2010-03-25
+
+o Bump version to 3.00, to be higher than the last ParseLex version that had it own (older)
+  version of Parse::Template (2.18).  This older version does not compile in Perl 5.11
+  due to the usage of a deprecated feature : 
+    Use of inherited AUTOLOAD for non-method %s() is deprecated
+  A new ParseLex will be uploaded without the older Parse::Template inside, and with a 
+  dependency to this Parse::Template instead.
+o Updated the existing English translation of the POD from the older version, replaced
+  the French POD by the English one.
+o Minor changes due to warnings.
+
+VERSION 0.37 - ???
+
+o Last version published by the original author, Philippe Verdret.

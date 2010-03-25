@@ -1,7 +1,4 @@
-MANIFEST
-Makefile.PL
-README
-doc/Template_en.pod
+Changes
 examples/delegation2.pl
 examples/derived.pl
 examples/die.pl
@@ -15,9 +12,15 @@ examples/recursive.pl
 examples/synopsis.pl
 examples/synopsis_bis.pl
 lib/Parse/Template.pm
-t/W.pm
+Makefile.PL
+MANIFEST
+README
 t/test1.t
 t/test2.t
 t/test3.t
 t/test4.t
 t/test5.t
+t/test6.t
+t/W.pm
+VERSION
+META.yml                                 Module meta-data (added by MakeMaker)

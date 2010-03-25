@@ -17,9 +17,9 @@ my $C = $A->new(%child);
 #print '$A->ANCESTOR(): ', $A->ANCESTOR();
 #print '$C->SUB_PART(): ', $C->SUB_PART();
 
-print '$A->ANCESTOR(): ', $A->ANCESTOR();
-print '$C->CHILD(): ', $C->CHILD();
-print '$C->SUB_PART(): ', $C->SUB_PART();
+print '$A->ANCESTOR(): ', 	$A->ANCESTOR();
+print '$C->CHILD(): ', 		$C->CHILD();
+print '$C->SUB_PART(): ', 	$C->SUB_PART();
 
 #print '$C->ANCESTOR(): ', $C->ANCESTOR();
 #print '$C->SUB_PART(): ', $C->SUB_PART();
