@@ -1,3 +1,7 @@
+VERSION 3.02 - 2010-03-26
+
+o Bump version number to force re-index after new ParseLex was uploaded without Parse::Template
+
 VERSION 3.01 - 2010-03-26
 
 o Ignore whitespace in the comparison run in the tests, to avoid tests breaking caused by
