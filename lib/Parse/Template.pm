@@ -2,7 +2,7 @@ use strict;
 use warnings;
 require 5.6.0;
 package Parse::Template;
-$Parse::Template::VERSION = '3.00';
+$Parse::Template::VERSION = '3.01';
 
 use Carp;
 use constant DEBUG => 0;
@@ -205,7 +205,7 @@ Parse::Template - Processor for templates containing Perl expressions
      'DATA' => q!Insert data: ! .
                q!1. List: %%"@list$N"%%! .
                q!2. Hash: %%"$hash{'key'}$N"%%! .
-               q!3. File content: %%print <FH>%%! .
+               q!3. File content: %%<FH>%%! .
                q!4. Sub: %%&SUB()$N%%!
     );
  

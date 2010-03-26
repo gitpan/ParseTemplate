@@ -1,4 +1,11 @@
-VERSION 2.20 - 2010-03-25
+VERSION 3.01 - 2010-03-26
+
+o Ignore whitespace in the comparison run in the tests, to avoid tests breaking caused by
+  blanks at the end of result lines or CR-LF vs LF differences.
+o Add -Iblib/lib to all test program executions, so that our library is used in the test;
+  otherwise tests fail if Parse::Template is not already installed in the machine
+
+VERSION 3.00 - 2010-03-25
 
 o Bump version to 3.00, to be higher than the last ParseLex version that had it own (older)
   version of Parse::Template (2.18).  This older version does not compile in Perl 5.11
@@ -10,6 +17,6 @@ o Updated the existing English translation of the POD from the older version, re
   the French POD by the English one.
 o Minor changes due to warnings.
 
-VERSION 0.37 - ???
+VERSION 0.37 - 2001-06-13
 
 o Last version published by the original author, Philippe Verdret.

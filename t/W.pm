@@ -56,16 +56,16 @@ sub result {
   my $result;
   if ($cmd) {
     my $popts = $self->{PerlOpts};
-    print "Execution of: $^X $popts $cmd\n" if $VERBOSE;
+    print "Execution of: $^X -Iblib/lib $popts $cmd\n" if $VERBOSE;
     die "unable to find '$cmd'" unless -f $cmd;
     # the following line doesn't work on Win95 (ActiveState's Perl, build 516):
-    # open( CMD, "$^X $cmd 2>err |" ) or warn "$0: Can't run. $!\n";
+    # open( CMD, "$^X -Iblib/lib $cmd 2>err |" ) or warn "$0: Can't run. $!\n";
     # corrected by Stefan Becker:
     local *SAVED_STDERR;
     #local $| = 1;
     open( SAVED_STDERR, ">&STDERR" );
     open( STDERR, "> err" ) or warn "$0: can't open 'err'";
-    open( CMD, "$^X $popts $cmd |" ) or warn "$0: Can't run '$^X $popts $cmd' ($!)\n";
+    open( CMD, "$^X -Iblib/lib $popts $cmd |" ) or warn "$0: Can't run '$^X -Iblib/lib $popts $cmd' ($!)\n";
     @result = <CMD>;
     close CMD;
     close STDERR;
@@ -83,7 +83,7 @@ sub result {
     $self->{Result} = join('', @result);
     if ($LOG) {
       print LOG "=" x 80, "\n";
-      print LOG "Execution of $^X $popts $cmd 2>err\n";
+      print LOG "Execution of $^X -Iblib/lib $popts $cmd 2>err\n";
       print LOG "=" x 80, "\n";
       print LOG "* Result:\n";
       print LOG "-" x 80, "\n";
@@ -179,22 +179,28 @@ sub comparator {
     # could be a specific editor
     $expected =~ s/$eed/(...deleted...)/g unless $eed eq '';
     $result =~ s/$red/(...deleted...)/g unless $red eq '';
-    if ($VERBOSE) {
-	print STDERR "\n";
-	print STDERR ">>>Expected:\n$expected\n";
-	print STDERR ">>>Effective:\n$result\n";
+	# ignore whitespace differences
+	(my $expected_cmp = $expected) =~ s/\s+/ /g; $expected_cmp =~ s/\s+$//;
+	(my $result_cmp   = $result)   =~ s/\s+/ /g; $result_cmp   =~ s/\s+$//;
+	
+    if ($VERBOSE || $expected_cmp ne $result_cmp) {
+		print STDERR "\n";
+		print STDERR ">>>Expected:\n$expected\n";
+		print STDERR ">>>Effective:\n$result\n";
     }
-    unless ($expected eq $result) {
-	print STDERR "not equals\n" if $VERBOSE;
-	if ($VERBOSE >= 2 and defined $detector) {
-	    print STDERR "Difference between expected and effective result: \n";
-	    $self -> $detector($expected, $result);
-	} elsif ($VERBOSE) {
-	}
-	0;
-    } else {
-	print STDERR "equals\n" if $VERBOSE;
-	1;
+    unless ($expected_cmp eq $result_cmp) {
+		print STDERR "not equals\n" if $VERBOSE;
+		if ($VERBOSE >= 2 and defined $detector) {
+			print STDERR "Difference between expected and effective result: \n";
+			$self -> $detector($expected, $result);
+		} 
+		elsif ($VERBOSE) {
+		}
+		0;
+    } 
+	else {
+		print STDERR "equals\n" if $VERBOSE;
+		1;
     }
 }
 # todo: defined named parameters
