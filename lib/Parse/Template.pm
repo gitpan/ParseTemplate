@@ -1,8 +1,8 @@
 use strict;
 use warnings;
-require 5.6.0;
+require 5.006;
 package Parse::Template;
-$Parse::Template::VERSION = '3.02';
+$Parse::Template::VERSION = '3.03';
 
 use Carp;
 use constant DEBUG => 0;

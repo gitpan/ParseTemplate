@@ -1,5 +1,10 @@
+VERSION 3.03 - 2010-04-03
+
+o Solve warning: v-string in use/require non-portable at blib/lib/Parse/Template.pm line 3.
+
 VERSION 3.02 - 2010-03-26
 
+o Solve RT #55977 (parse::template should not be part of parselex)
 o Bump version number to force re-index after new ParseLex was uploaded without Parse::Template
 
 VERSION 3.01 - 2010-03-26
