@@ -1,3 +1,7 @@
+VERSION 3.04 - 2010-08-13
+
+o Solve RT #58128: regular expression parsing is broken for some special characters
+
 VERSION 3.03 - 2010-04-03
 
 o Solve warning: v-string in use/require non-portable at blib/lib/Parse/Template.pm line 3.

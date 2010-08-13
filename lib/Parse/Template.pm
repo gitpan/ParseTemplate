@@ -2,7 +2,7 @@ use strict;
 use warnings;
 require 5.006;
 package Parse::Template;
-$Parse::Template::VERSION = '3.03';
+$Parse::Template::VERSION = '3.04';
 
 use Carp;
 use constant DEBUG => 0;
@@ -87,10 +87,19 @@ sub ppregexp {
     $@ =~ s/\s+at\s+[^\s]+\s+line\s+\d+[.]\n$//; # annoying info
     Carp::croak $@;	
   }
-  $regexp =~ s{
-    ((?:\G|[^\\])(?:\\{2,2})*)	# Context before
-    ([/!\"])			# Used delimiters
-  }{$1\\$2}xg;
+  for ($regexp) {
+	s{
+		( (?: \G | [^\\] ) (?: \\{2} )* )		# even number of back-slashes 
+		( [!/\"] )								# used delimiters
+	}{$1\\$2}xg;
+	
+	# replace back exceptions (?!...), (?<!...)
+	s{
+		( \( \? <? ) 							# (? or (?<
+		\\										# inserted by first replace
+		( ! )									# delimiter
+	}{$1$2}xg;									# remove back-slash
+  }
   $regexp;
 }
 sub getPart {		
