@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               ParseTemplate
-version:            3.04
+version:            3.05
 abstract:           Processor for templates containing Perl expressions
 author:
     - Philippe Verdret <pverdret@dalet.com>

@@ -1,3 +1,8 @@
+VERSION 3.05 - 2010-08-14
+
+o Test FAIL ParseTemplate-3.04 v5.6.2 Linux due to different error message
+  for mal-formed regexp
+
 VERSION 3.04 - 2010-08-13
 
 o Solve RT #58128: regular expression parsing is broken for some special characters

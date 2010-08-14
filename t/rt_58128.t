@@ -14,7 +14,7 @@ is Parse::Template->ppregexp('blarg(?<!blarg)'), 'blarg(?<!blarg)', "RT#58128";
 # check that the other conditions are OK
 
 eval { Parse::Template->ppregexp('(') };
-like $@, qr/^Unmatched \( in regex; marked by <-- HERE in m\/\( <-- HERE \/ at t.rt_58128\.t line \d+\n/,
+like $@, qr/^Unmatched \( .*?\/ at t.rt_58128\.t line \d+\n/,
 		"badly formed";
 
 is Parse::Template->ppregexp('[a-z]'), '[a-z]', "normal";
