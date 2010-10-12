@@ -13,4 +13,4 @@ is Parse::Template->EVAL_TRACE, 0, "EVAL_TRACE is off";
 is Parse::Template->SHOW_PART, 0, "SHOW_PART is off";
 is Parse::Template->SIGN_PART, 0, "SIGN_PART is off";
 
-done_testing;
+done_testing();

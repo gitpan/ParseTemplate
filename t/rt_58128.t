@@ -39,4 +39,4 @@ is Parse::Template->ppregexp('\\\\\\\\!1'), '\\\\\\\\\\!1', "! escaped preceeded
 is Parse::Template->ppregexp('\\\\\\\\/1'), '\\\\\\\\\\/1', "/ escaped preceeded by quad backslash - escape";
 is Parse::Template->ppregexp('\\\\\\\\"1'), '\\\\\\\\\\"1', "\" escaped preceeded by quad backslash - escape";
 
-done_testing;
+done_testing();

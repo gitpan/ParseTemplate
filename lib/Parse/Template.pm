@@ -2,7 +2,7 @@ use strict;
 use warnings;
 require 5.006;
 package Parse::Template;
-$Parse::Template::VERSION = '3.05';
+$Parse::Template::VERSION = '3.06';
 
 use Carp;
 use constant DEBUG => 0;
