@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               ParseTemplate
-version:            3.06
+version:            3.07
 abstract:           Processor for templates containing Perl expressions
 author:
     - Philippe Verdret <pverdret@dalet.com>
@@ -11,7 +11,8 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    Symbol:  0
+    Symbol:      0
+    Test::More:  0.96
 no_index:
     directory:
         - t

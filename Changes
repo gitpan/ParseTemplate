@@ -1,45 +1,61 @@
-VERSION 3.06 - 2010-10-12
+3.07	2010-10-15
 
-o Solved problem with test scripts: 
-  Bareword "done_testing" not allowed while "strict subs" in use
+	Bug Fixes
+	* Solved problem with test scripts: 
+	  done_testing() requires Test::More 0.96
 
-VERSION 3.05 - 2010-08-14
+3.06	2010-10-12
 
-o Test FAIL ParseTemplate-3.04 v5.6.2 Linux due to different error message
-  for mal-formed regexp
+	Bug Fixes
+	* Solved problem with test scripts: 
+	  Bareword "done_testing" not allowed while "strict subs" in use
 
-VERSION 3.04 - 2010-08-13
+3.05	2010-08-14
 
-o Solve RT #58128: regular expression parsing is broken for some special characters
+	Bug Fixes
+	* Test FAIL ParseTemplate-3.04 v5.6.2 Linux due to different error message
+	  for mal-formed regexp
 
-VERSION 3.03 - 2010-04-03
+3.04	2010-08-13
 
-o Solve warning: v-string in use/require non-portable at blib/lib/Parse/Template.pm line 3.
+	Bug Fixes
+	* Solve RT #58128: regular expression parsing is broken for some special characters
 
-VERSION 3.02 - 2010-03-26
+3.03	2010-04-03
 
-o Solve RT #55977 (parse::template should not be part of parselex)
-o Bump version number to force re-index after new ParseLex was uploaded without Parse::Template
+	Bug Fixes
+	* Solve warning: v-string in use/require non-portable 
+	  at blib/lib/Parse/Template.pm line 3.
 
-VERSION 3.01 - 2010-03-26
+3.02	2010-03-26
 
-o Ignore whitespace in the comparison run in the tests, to avoid tests breaking caused by
-  blanks at the end of result lines or CR-LF vs LF differences.
-o Add -Iblib/lib to all test program executions, so that our library is used in the test;
-  otherwise tests fail if Parse::Template is not already installed in the machine
+	Bug Fixes
+	* Solve RT #55977 (parse::template should not be part of parselex)
+	* Bump version number to force re-index, after new ParseLex was uploaded 
+	  without Parse::Template
 
-VERSION 3.00 - 2010-03-25
+3.01	2010-03-26
 
-o Bump version to 3.00, to be higher than the last ParseLex version that had it own (older)
-  version of Parse::Template (2.18).  This older version does not compile in Perl 5.11
-  due to the usage of a deprecated feature : 
-    Use of inherited AUTOLOAD for non-method %s() is deprecated
-  A new ParseLex will be uploaded without the older Parse::Template inside, and with a 
-  dependency to this Parse::Template instead.
-o Updated the existing English translation of the POD from the older version, replaced
-  the French POD by the English one.
-o Minor changes due to warnings.
+	Bug Fixes
+	* Ignore whitespace in the comparison run in the tests, to avoid tests breaking caused by
+	  blanks at the end of result lines or CR-LF vs LF differences.
+	* Add -Iblib/lib to all test program executions, so that our library is used in the test;
+	  otherwise tests fail if Parse::Template is not already installed in the machine
 
-VERSION 0.37 - 2001-06-13
+3.00	2010-03-25
 
-o Last version published by the original author, Philippe Verdret.
+	Bug Fixes
+	* Bump version to 3.00, to be higher than the last ParseLex version that 
+	  had it own (older) version of Parse::Template (2.18).
+	  This older version does not compile in Perl 5.11 due to the usage of a
+	  deprecated feature : Use of inherited AUTOLOAD for non-method %s() is deprecated
+	  A new ParseLex will be uploaded without the older Parse::Template inside, and with a 
+	  dependency to this Parse::Template instead.
+	* Updated the existing English translation of the POD from the older version, replaced
+	  the French POD by the English one.
+	* Minor changes due to warnings.
+
+0.37	2001-06-13
+
+	Other
+	* Last version published by the original author, Philippe Verdret.

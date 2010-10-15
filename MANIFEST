@@ -24,5 +24,4 @@ t/test4.t
 t/test5.t
 t/test6.t
 t/W.pm
-VERSION
 META.yml                                 Module meta-data (added by MakeMaker)

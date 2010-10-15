@@ -9,7 +9,7 @@ require 5.004;
 use strict;
 package W;			# Test::Wrapper
 use vars qw($VERBOSE $LOG);
-$W::VERSION = '1.3';
+$W::VERSION = '3.07';
 $W::VERBOSE = $ENV{TEST_VERBOSE} || 0;
 $W::LOG = $ENV{TEST_LOG} ? 'testlog' : 0;
 

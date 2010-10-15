@@ -13,7 +13,8 @@ WriteMakefile(
 						   },
 	      dist			=> { COMPRESS => 'gzip', SUFFIX => 'gz' },
 		  PREREQ_PM 	=> {
-							'Symbol'		=> 0,
-						   },
+			'Test::More'	=> 0.96,	# needs done_testing()
+			'Symbol'		=> 0,
+		  },
 );
 
